@@ -60,6 +60,6 @@ ENV/
 cabbage/
 assets/
 images/
-nohup.out
 
+nohup.out
 splash*.png
