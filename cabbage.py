@@ -84,17 +84,17 @@ class CabbageConfig(Config):
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 2
+    IMAGES_PER_GPU = 1
 
     # Uncomment to train on 8 GPUs (default is 1)
     # GPU_COUNT = 8
 
     # Number of classes (including background)
     # NUM_CLASSES = 1 + 1
-    NUM_CLASSES = 1 + 1 + 1  # bg, cabbage, occluded
+    NUM_CLASSES = 1 + 1  # bg, cabbage, occluded
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 10
+    STEPS_PER_EPOCH = 100
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
@@ -165,13 +165,17 @@ class CabbageDataset(utils.Dataset):
             return coco
 
     def extract_not_occluded_image_ids(self, coco: COCO) -> List[int]:
-        res = []
-        for x in coco.image_info:
-            occluded = [y['attributes']['occluded'] for y in x['annotations']]
-            if True in occluded:
-                continue
-            else:
-                res.append(x['id'])
+        res, tmp = [], []
+        prev_image_id = list(coco.anns.values())[0]['image_id']
+        for ann in coco.anns.values():
+            image_id = ann['image_id']
+            if image_id != prev_image_id:
+                if True not in tmp:
+                    res.append(prev_image_id)
+                tmp = []
+
+            tmp.append(ann['attributes']['occluded'])
+            prev_image_id = image_id
         return res
 
     def auto_download(self, dataDir, dataType, dataYear):

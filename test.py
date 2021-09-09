@@ -90,17 +90,19 @@ class CabbageDataset(utils.Dataset):
 
 if __name__ == "__main__":
     dataset_train = CabbageDataset()
-    dataset_train.load_cabbage("cabbage", "train")
+    coco = dataset_train.load_cabbage("cabbage", "train", return_coco=True)
     dataset_train.prepare()
 
-    print(dataset_train.image_ids)
-    res = []
-    for x in dataset_train.image_info:
-        occluded = [y['attributes']['occluded'] for y in x['annotations']]
-        print(occluded)
-        if True in occluded:
-            continue
-        else:
-            res.append(x['id'])
+    res, tmp = [], []
+    prev_image_id = list(coco.anns.values())[0]['image_id']
+    for ann in coco.anns.values():
+        image_id = ann['image_id']
+        if image_id != prev_image_id:
+            if True not in tmp:
+                res.append(prev_image_id)
+            tmp = []
+
+        tmp.append(ann['attributes']['occluded'])
+        prev_image_id = image_id
 
     print(res)
